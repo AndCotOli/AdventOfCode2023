@@ -1,64 +1,49 @@
 """Solutions for advent of code day 3."""
+import regex as re
+from math import prod
+
+
+def getChars(input):
+    """Get symbols and adjacent numbers."""
+    chars = {
+        (r, c): []
+        for r in range(len(input))
+        for c in range(len(input[0]))
+        if input[r][c] not in "0123456789."
+    }
+
+    for r, row in enumerate(input):
+        for n in re.finditer(r"\d+", row):
+            border = {
+                (r, c)
+                for r in (r - 1, r, r + 1)
+                for c in range(n.start() - 1, n.end() + 1)
+            }
+
+            for o in border & chars.keys():
+                chars[o].append(int(n.group()))
+
+    return chars
 
 
 def part1(filename: str = "../Input/day3.test") -> int:
     """Solution for part 1."""
-
-    def isValidSymbol(char: str) -> bool:
-        return char != "." and not char.isdigit()
-
-    def checkSurroundings(index: tuple, input) -> bool:
-        i, j = index
-        up = max(i - 1, 0)
-        left = max(j - 1, 0)
-        right = min(j + 1, len(input[i]) - 1)
-        down = min(i + 1, len(input) - 1)
-
-        return (
-            isValidSymbol(input[up][left])
-            or isValidSymbol(input[up][j])
-            or isValidSymbol(input[up][right])
-            or isValidSymbol(input[i][left])
-            or isValidSymbol(input[i][j])
-            or isValidSymbol(input[i][right])
-            or isValidSymbol(input[down][left])
-            or isValidSymbol(input[down][j])
-            or isValidSymbol(input[down][right])
-        )
-
-    def findNextSymbol(start: int, line: str) -> int:
-        i = start
-        while i < len(line):
-            if not line[i].isdigit():
-                return i
-            i += 1
-        return i
-
-    sol = 0
-
     with open(filename) as file:
         input = file.read().strip().split("\n")
-        i = 0
-        while i < len(input):
-            line = input[i]
-            j = 0
-            while j < len(line):
-                if line[j].isdigit():
-                    lastDigit = findNextSymbol(j, line) - 1
-                    if checkSurroundings((i, j), input) or checkSurroundings(
-                        (i, lastDigit), input
-                    ):
-                        sol += int(line[j : lastDigit + 1])
-                        j = lastDigit
-                j += 1
-            i += 1
 
-        return sol
+        chars = getChars(input)
+
+        return sum(sum(p) for p in chars.values())
 
 
 def part2(filename: str = "../Input/day3.test") -> int:
     """Solution for part 2."""
-    pass
+    with open(filename) as file:
+        input = file.read().strip().split("\n")
+
+        chars = getChars(input)
+
+        return sum(prod(p) for p in chars.values() if len(p) == 2)
 
 
 if __name__ == "__main__":
